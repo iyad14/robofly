@@ -1,0 +1,2 @@
+bool colliding
+string[] direction
