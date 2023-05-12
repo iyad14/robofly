@@ -1,0 +1,1 @@
+string platform_in_control

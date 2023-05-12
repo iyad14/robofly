@@ -2,7 +2,7 @@ import rospy
 from sensor_msgs.msg import Range
 from geometry_msgs.msg import Twist
 from robofly.msg import Height_info
-
+from robofly.msg import Control
 
 
 class HeightModerator:
@@ -14,17 +14,25 @@ class HeightModerator:
         self.rate = rospy.Rate(10)
         self.height_info = Height_info()
         self.twist = Twist()
+        self.control_mode = None
+        
         rospy.Subscriber('/sonar_height', Range, self.sonar_height_callback)
         rospy.Subscriber("/cmd_vel", Twist, self.vel_message_callback)
+        rospy.Subscriber("/control_mode", Control, self.control_mode_change_callback)      
+        
         self.height_info_pub = rospy.Publisher("/height_info", Height_info, queue_size=10)
         self.height_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
     
     def vel_message_callback(self, msg):
         self.twist = msg    
+        
+    def control_mode_change_callback(self, msg):
+        self.control_mode = msg.platform_in_control
          
     def sonar_height_callback(self, data):
         self.height = data.range
-        self.hover()
+        if self.control_mode == "wanderer":
+            self.hover()
         
     def hover(self):    
         if self.height < 0.9*self.desired_height:

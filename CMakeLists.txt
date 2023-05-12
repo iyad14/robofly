@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  hector_uav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -54,6 +55,7 @@ add_message_files(
   # Message2.msg
     Collision_info.msg
     Height_info.msg
+    Control.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -108,7 +110,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES robofly
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+ CATKIN_DEPENDS roscpp rospy std_msgs hector_uav_msgs
 #  DEPENDS system_lib
 )
 
@@ -172,6 +174,7 @@ catkin_install_python(PROGRAMS
   scripts/collision_detector.py
   scripts/height_moderator.py
   scripts/transform_fixer.py
+  scripts/GUI.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
