@@ -175,6 +175,7 @@ catkin_install_python(PROGRAMS
   scripts/height_moderator.py
   scripts/transform_fixer.py
   scripts/GUI.py
+  scripts/odometry_updater.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -14,9 +14,6 @@ import os
 import roslaunch.rlutil
 from robofly.msg import Control
 # from std_srvs.srv import SetBool
-from PIL import ImageTk
-from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image
 from hector_uav_msgs.srv import EnableMotors
 import cv2
 
@@ -82,7 +79,7 @@ class GUI:
 
 
         ttk.Button(self.mainframe, text="Turn Left", command=self.ccw).grid(column=1, row=6, sticky=tk.W)
-        ttk.Button(self.mainframe, text="Fordward", command=self.forward).grid(column=2, row=6, sticky=tk.W)
+        ttk.Button(self.mainframe, text="Forward", command=self.forward).grid(column=2, row=6, sticky=tk.W)
         ttk.Button(self.mainframe, text="Turn Right", command=self.cw).grid(column=3, row=6, sticky=tk.W)
 
 
@@ -95,7 +92,8 @@ class GUI:
         ttk.Button(self.mainframe, text="Down", command=self.down).grid(column=3, row=8, sticky=tk.W)
         
         ttk.Button(self.mainframe, text="Enable Motors", command=self.enable_motors).grid(column=1, row=9, sticky=tk.W)
-        ttk.Button(self.mainframe, text="View Frames", command=self.show_frame).grid(column=2, row=9, sticky=tk.W)
+        ttk.Button(self.mainframe, text="Path Finder", command=self.go_to_destination).grid(column=2, row=9, sticky=tk.W)
+        
         ttk.Label(self.mainframe, text="1").grid(column=3, row=2, sticky=tk.W)
         
         for child in self.mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
@@ -105,7 +103,7 @@ class GUI:
         #Subscribers
         self.posicionLider_sub = rospy.Subscriber("/ground_truth/state", Odometry , self.pose_callback)
         self.orientaLider_sub = rospy.Subscriber("/ground_truth_to_tf/pose", PoseStamped , self.rot_callback)
-        self.image = rospy.Subscriber('/camera/image_raw', Image, self.image_callback)
+
         
         #Publishers
         self.takeoff_pub = rospy.Publisher('/ardrone/takeoff', Empty, queue_size=1)
@@ -117,18 +115,6 @@ class GUI:
         self.control_mode.platform_in_control = "GUI"
         self.mode_pub.publish(self.control_mode)
 
-
-    # Update the camera image in the image_callback method
-    def image_callback(self, data):
-        # Convert the ROS image to a PIL image
-        self.bridge = CvBridge()
-        try:
-            # Convert the ROS image to a PIL image
-            _, self.image = self.bridge_img_cv2.imgmsg_to_cv2(self.image_topic, "bgr8")
-        
-        except Exception as e:
-            print(e)
-            
             
     def pose_callback(self, data):
         self.x_p.set("{0:.2f}".format(data.pose.pose.position.x))
@@ -187,56 +173,56 @@ class GUI:
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Up")
             vel_msg = Twist()
-            vel_msg.linear.z = float(1.0)
+            vel_msg.linear.z = float(0.5)
             self.vel_pub.publish(vel_msg)
 
     def down(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Down")
             vel_msg = Twist()
-            vel_msg.linear.z = float(-1.0)
+            vel_msg.linear.z = float(-0.5)
             self.vel_pub.publish(vel_msg)
 
     def forward(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Fordward")
             vel_msg = Twist()
-            vel_msg.linear.x = float(1.0)
+            vel_msg.linear.x = float(0.2)
             self.vel_pub.publish(vel_msg)
 
     def backward(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Backward")
             vel_msg = Twist()
-            vel_msg.linear.x = float(-1.0)
+            vel_msg.linear.x = float(-0.2)
             self.vel_pub.publish(vel_msg)
 
     def right(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Right")
             vel_msg = Twist()
-            vel_msg.linear.y = float(-1.0)
+            vel_msg.linear.y = float(-0.2)
             self.vel_pub.publish(vel_msg)
 
     def left(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Left")
             vel_msg = Twist()
-            vel_msg.linear.y = float(1.0)
+            vel_msg.linear.y = float(0.2)
             self.vel_pub.publish(vel_msg)
 
     def cw(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Turn Right")
             vel_msg = Twist()
-            vel_msg.angular.z = float(-1.0)
+            vel_msg.angular.z = float(-0.2)
             self.vel_pub.publish(vel_msg)
 
     def ccw(self):
         if self.control_mode.platform_in_control == "GUI":
             self.setText("Turn Left")
             vel_msg = Twist()
-            vel_msg.angular.z = float(1.0)
+            vel_msg.angular.z = float(0.2)
             self.vel_pub.publish(vel_msg)
         
 
@@ -301,11 +287,24 @@ class GUI:
             rospy.loginfo("Motors enabled")
         except rospy.ServiceException as e:
             rospy.logerr("Failed to call 'enable_motors' service: {}".format(e))
+        
+         
+    def go_to_destination(self):
+        self.control_mode.platform_in_control = "path_finder"
+        self.mode_pub.publish(self.control_mode)
+        # get an instance of the RosPack class
+        rospack = rospkg.RosPack()
+        # get the path of the package that this script is located in    
+        launch_file_path = os.path.join(rospack.get_path('unit2_pp'), 'launch')
+        # construct the path to the launch file within the package
+        launch_file_path = os.path.join(launch_file_path,'unit2_solution.launch')
 
-    def show_frame(self):
-        # show camera output in a different window
-        pass
-              
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [launch_file_path])
+        launch.start() 
+             
     def run(self):
         while not rospy.is_shutdown():
             self.rate.sleep()

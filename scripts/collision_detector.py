@@ -9,7 +9,7 @@ class ObstacleDetector:
     def __init__(self):
       rospy.init_node("collision_detector", anonymous=True)
       
-      self.collision_threshold = 0.65
+      self.collision_threshold = 0.7
       self.direction = []
       self.pub = rospy.Publisher("/collision_detection", Collision_info, queue_size=10)
       rospy.Subscriber("/scan", LaserScan, self.environment_scanner_callback)

@@ -4,7 +4,7 @@ import rospy
 from robofly.msg import Collision_info, Height_info
 from geometry_msgs.msg import Twist
 from robofly.msg import Control
-
+from nav_msgs.msg import Odometry
 
 class MotionController:
     def __init__(self):        
@@ -27,26 +27,25 @@ class MotionController:
         
     def collision_detection_callback(self, collision_info):
         if self.control_mode == "wanderer":
-            rospy.loginfo(collision_info.direction)
             if collision_info.colliding:
-                if collision_info.direction[0] == 'front':
-                    self.twist.linear.x = 0
-                    if collision_info.direction[1] == 'right':
+                    if collision_info.direction[0] == 'front':
+                        self.twist.linear.x = 0
+                        if collision_info.direction[1] == 'right':
+                            self.rotate_ccw()
+                        else:
+                            self.rotate_cw()
+                            
+                        self.vel_pub.publish(self.twist)
+                    elif collision_info.direction[0] == 'right':
+                        self.twist.linear.x = 0
+                        self.vel_pub.publish(self.twist)
                         self.rotate_ccw()
-                    else:
+                    elif collision_info.direction[0] == 'left':
+                        self.twist.linear.x = 0
+                        self.vel_pub.publish(self.twist)
                         self.rotate_cw()
-                        
-                    self.vel_pub.publish(self.twist)
-                elif collision_info.direction[0] == 'right':
-                    self.twist.linear.x = 0
-                    self.vel_pub.publish(self.twist)
-                    self.rotate_ccw()
-                elif collision_info.direction[0] == 'left':
-                    self.twist.linear.x = 0
-                    self.vel_pub.publish(self.twist)
-                    self.rotate_cw()
-                else:
-                    pass
+                    else:
+                        pass
             else:
                 self.move_forward()
             
@@ -61,19 +60,19 @@ class MotionController:
 
     def move_backward(self):
         if self.on_height:
-            self.twist.linear.x = -0.4
+            self.twist.linear.x = -0.3
             self.vel_pub.publish(self.twist)
 
     def rotate_cw(self):
         if self.on_height:
             rospy.loginfo("rotating cw")
-            self.twist.angular.z = -0.6
+            self.twist.angular.z = -0.2
             self.vel_pub.publish(self.twist)
 
     def rotate_ccw(self):
         if self.on_height:
             rospy.loginfo("rotating ccw")
-            self.twist.angular.z = 0.6
+            self.twist.angular.z = 0.2
             self.vel_pub.publish(self.twist)
 
     def run(self):

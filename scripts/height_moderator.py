@@ -10,7 +10,7 @@ class HeightModerator:
     def __init__(self):
         rospy.init_node('sonar_height_subscriber', anonymous=True)
 
-        self.desired_height = 1
+        self.desired_height = 0.4
         self.rate = rospy.Rate(10)
         self.height_info = Height_info()
         self.twist = Twist()
@@ -32,6 +32,7 @@ class HeightModerator:
     def sonar_height_callback(self, data):
         self.height = data.range
         if self.control_mode == "wanderer":
+        # if self.control_mode == "GUI":
             self.hover()
         
     def hover(self):    

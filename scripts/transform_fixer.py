@@ -11,7 +11,7 @@ class TransformFixer:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.pub = rospy.Publisher('/tf', tf2_msgs.msg.TFMessage, queue_size=10)
-        self.rate = rospy.Rate(10) # 10 Hz
+        self.rate = rospy.Rate(1000) # 10 Hz
 
     def fix_transform(self):
         while not rospy.is_shutdown():
@@ -19,6 +19,9 @@ class TransformFixer:
                 trans = self.tf_buffer.lookup_transform('nav', 'base_footprint', rospy.Time())
                 tf_msg = tf2_msgs.msg.TFMessage([trans])
                 self.pub.publish(tf_msg)
+                trans = self.tf_buffer.lookup_transform('nav', 'world', rospy.Time())
+                tf_msg = tf2_msgs.msg.TFMessage([trans])
+                # self.pub.publish(tf_msg)
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
                 pass # If transform is not available or not accurate enough, do nothing
             self.rate.sleep()

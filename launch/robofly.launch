@@ -3,4 +3,5 @@
         <node pkg="robofly" name="motion_controller" type="motion_controller.py" output="screen"/>
         <node pkg="robofly" name="collision_detector" type="collision_detector.py"  output="screen"/>
         <node pkg="robofly" name="height_moderator" type="height_moderator.py"  output="screen"/>
+        <!-- <node pkg="robofly" name="transform_fixer" type="transform_fixer.py"  output="screen"/> -->
 </launch>
